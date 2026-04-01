@@ -1,0 +1,54 @@
+{
+  "UKHA001": {
+    "labourId": "UKHA001",
+    "name": "Rahul Kumar",
+    "mobile": "9876543210",
+    "countryCode": "+91",
+    "aadhaar": "123456789012",
+    "email": "rahul.k@example.com",
+    "dob": "2008-04-01",
+    "gender": "male",
+    "ayushmanCard": false,
+    "ayushmanCardNumber": "",
+    "mappedBarcode": ""
+  },
+  "DEMO002": {
+    "labourId": "DEMO002",
+    "name": "Priya Sharma",
+    "mobile": "9123456789",
+    "countryCode": "+91",
+    "aadhaar": "998877665544",
+    "email": "",
+    "dob": "1995-06-15",
+    "gender": "female",
+    "ayushmanCard": true,
+    "ayushmanCardNumber": "PMJAY-DEMO-123456",
+    "mappedBarcode": "4006381333931"
+  },
+  "YH003": {
+    "labourId": "YH003",
+    "name": "Amit Verma",
+    "mobile": "9988776600",
+    "countryCode": "+91",
+    "aadhaar": "112233445566",
+    "email": "amit.verma@example.com",
+    "dob": "1992-11-20",
+    "gender": "male",
+    "ayushmanCard": true,
+    "ayushmanCardNumber": "ABDM-YH003-789",
+    "mappedBarcode": ""
+  },
+  "YH004": {
+    "labourId": "YH004",
+    "name": "Sunita Devi",
+    "mobile": "9011122233",
+    "countryCode": "+91",
+    "aadhaar": "667788990011",
+    "email": "",
+    "dob": "1988-03-08",
+    "gender": "female",
+    "ayushmanCard": false,
+    "ayushmanCardNumber": "",
+    "mappedBarcode": ""
+  }
+}
