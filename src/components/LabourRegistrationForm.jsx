@@ -44,7 +44,7 @@ function isLabourFormComplete(f) {
   return Object.keys(validateLabourForm(f)).length === 0;
 }
 
-export default function LabourRegistrationForm() {
+export default function LabourRegistrationForm({ atmId = "" }) {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [loaded, setLoaded] = useState(false);
@@ -79,7 +79,7 @@ export default function LabourRegistrationForm() {
     }
     setLoadingLabour(true);
     try {
-      const data = await fetchLabourById(id);
+      const data = await fetchLabourById(id, { atmId });
       setForm({
         ...emptyForm(),
         ...data,
@@ -113,7 +113,7 @@ export default function LabourRegistrationForm() {
       el?.focus?.();
       return;
     }
-    setPreviewValues({ ...form });
+    setPreviewValues({ ...form, atmId });
     setPreviewOpen(true);
   }
 
@@ -124,6 +124,7 @@ export default function LabourRegistrationForm() {
     setSubmitError("");
     try {
       await submitLabourRegistration({
+        atmId: previewValues.atmId,
         labourId: previewValues.labourId,
         name: previewValues.name,
         countryCode: previewValues.countryCode,
@@ -162,6 +163,11 @@ export default function LabourRegistrationForm() {
             ? `Register: ${labourIdTrimmed}`
             : "Labour registration"}
         </h1>
+        {atmId ? (
+          <p className="form-card__atm" aria-label="Current ATM ID">
+            ATM ID: <strong>{atmId}</strong>
+          </p>
+        ) : null}
 
         {successMsg ? (
           <p className="banner banner--success" role="status">
@@ -198,7 +204,7 @@ export default function LabourRegistrationForm() {
             />
             <button
               type="button"
-              className="btn btn-secondary"
+              className="btn btn-load-details"
               onClick={onLoadLabour}
               disabled={loadingLabour}
             >

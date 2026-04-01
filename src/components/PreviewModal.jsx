@@ -24,6 +24,7 @@ export default function PreviewModal({ open, values, onBack, onConfirm, submitti
   }
 
   const rows = [
+    ["ATM ID", values.atmId || "—"],
     ["Labour ID", values.labourId],
     ["Name", values.name],
     ["Mobile", `${values.countryCode || ""} ${values.mobile || ""}`.trim()],

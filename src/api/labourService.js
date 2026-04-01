@@ -26,10 +26,14 @@ function normalizePayload(data, fallbackId) {
 
 const KNOWN_IDS = Object.keys(DUMMY_LABOUR);
 
-export async function fetchLabourById(labourId) {
+export async function fetchLabourById(labourId, options = {}) {
   const id = String(labourId || "").trim();
   if (!id) {
     throw new Error("Labour ID is required.");
+  }
+  const atmId = String(options.atmId || "").trim();
+  if (!atmId) {
+    throw new Error("ATM ID is missing. Refresh the page and enter your ATM ID.");
   }
 
   await delay(350);
@@ -39,10 +43,17 @@ export async function fetchLabourById(labourId) {
       `Labour not found. Try: ${KNOWN_IDS.slice(0, 3).join(", ")}${KNOWN_IDS.length > 3 ? "…" : ""}`,
     );
   }
+  // When wiring a real API, pass atmId (e.g. query ?atmId= or header)
+  if (import.meta.env.DEV) {
+    console.info("[YoloHealth dummy fetch labour]", { labourId: id, atmId });
+  }
   return normalizePayload({ ...row }, id);
 }
 
 export async function submitLabourRegistration(payload) {
+  if (!String(payload?.atmId || "").trim()) {
+    throw new Error("ATM ID is required to submit.");
+  }
   await delay(450);
   // Dev visibility of the full payload (remove or switch to logging service when API exists)
   console.info("[YoloHealth dummy submit]", JSON.stringify(payload, null, 2));
