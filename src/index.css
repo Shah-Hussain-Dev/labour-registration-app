@@ -222,6 +222,50 @@ body {
   color: var(--yh-muted);
 }
 
+@media (max-width: 719px) {
+  .site-header__inner {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .site-header__left {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .site-header__brand-block {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .site-header__titles {
+    align-items: center;
+    width: 100%;
+  }
+
+  .site-header__brand,
+  .site-header__tag {
+    text-align: center;
+  }
+
+  .site-header__actions {
+    width: 100%;
+    margin-left: 0;
+    justify-content: center;
+  }
+
+  .atm-id-display {
+    max-width: 100%;
+    text-align: center;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
 .site-main {
   flex: 1 1 auto;
   width: 100%;
