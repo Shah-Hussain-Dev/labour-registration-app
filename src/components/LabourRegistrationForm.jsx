@@ -34,7 +34,14 @@ function validateLabourForm(f) {
   if (f.ayushmanCard && !String(f.ayushmanCardNumber || "").trim()) {
     err.ayushmanCardNumber = "Ayushman card number is required";
   }
+  const barcode = String(f.mappedBarcode || "").trim();
+  if (!barcode) err.mappedBarcode = "EAN-13 barcode is required";
+  else if (!/^\d{13}$/.test(barcode)) err.mappedBarcode = "Enter all 13 digits";
   return err;
+}
+
+function isLabourFormComplete(f) {
+  return Object.keys(validateLabourForm(f)).length === 0;
 }
 
 export default function LabourRegistrationForm() {
@@ -145,6 +152,7 @@ export default function LabourRegistrationForm() {
   }
 
   const labourIdTrimmed = String(form.labourId || "").trim();
+  const canReviewSubmit = loaded && isLabourFormComplete(form);
 
   return (
     <>
@@ -173,7 +181,7 @@ export default function LabourRegistrationForm() {
           <div className="labour-id-row">
             <input
               id="labourId"
-              type="text"
+              type="search"
               className="input"
               autoComplete="off"
               disabled={loadingLabour}
@@ -375,7 +383,7 @@ export default function LabourRegistrationForm() {
 
                 <div className="field span-barcode">
                   <label className="field-label" htmlFor="mappedBarcode">
-                    EAN-13 barcode
+                    EAN-13 barcode <span className="req">*</span>
                   </label>
                   <p className="field-hint field-hint--tight">
                     USB / Bluetooth scanners: tap here, then scan (the digits appear like typing). Or use the camera
@@ -392,7 +400,10 @@ export default function LabourRegistrationForm() {
                     enterKeyHint="done"
                     value={form.mappedBarcode}
                     onChange={(e) => updateField("mappedBarcode", e.target.value.replace(/\D/g, "").slice(0, 13))}
+                    aria-invalid={errors.mappedBarcode ? "true" : "false"}
+                    aria-required="true"
                   />
+                  {errors.mappedBarcode ? <p className="field-error">{errors.mappedBarcode}</p> : null}
                   <div className="barcode-actions">
                     <button type="button" className="btn btn-scan" onClick={() => setBarcodeScanOpen(true)}>
                       Scan with camera (EAN-13)
@@ -410,7 +421,16 @@ export default function LabourRegistrationForm() {
             </div>
 
             <div className="form-footer">
-              <button type="submit" className="btn btn-primary btn-submit-main">
+              <button
+                type="submit"
+                className="btn btn-block btn-primary btn-submit-main"
+                disabled={!canReviewSubmit}
+                title={
+                  canReviewSubmit
+                    ? undefined
+                    : "Enter every required field (red *) including a valid 13-digit EAN-13 barcode."
+                }
+              >
                 Review & submit
               </button>
             </div>

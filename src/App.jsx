@@ -2,7 +2,7 @@ import LabourRegistrationForm from "./components/LabourRegistrationForm.jsx";
 
 export default function App() {
   return (
-    <div className="app-shell app-shell--mobile">
+    <div className="app-shell">
       <header className="site-header">
         <div className="site-header__inner">
           <span className="site-header__brand">YoloHealth</span>
