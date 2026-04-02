@@ -1,5 +1,9 @@
 import { lazy, Suspense, useState } from "react";
-import { fetchLabourById, submitLabourRegistration } from "../api/labourService.js";
+import {
+  fetchLabourById,
+  normalizeMobileForApi,
+  submitLabourRegistration,
+} from "../api/labourService.js";
 import PreviewModal from "./PreviewModal.jsx";
 
 const BarcodeScanModal = lazy(() => import("./BarcodeScanModal.jsx"));
@@ -11,6 +15,7 @@ const emptyForm = () => ({
   mobile: "",
   aadhaar: "",
   email: "",
+  address: "",
   dob: "",
   gender: "",
   ayushmanCard: false,
@@ -19,24 +24,83 @@ const emptyForm = () => ({
 });
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const LABOUR_ID_RE = /^[\dA-Za-z\-]{4,32}$/;
+const BARCODE_RE = /^[A-Za-z0-9\-]{3,64}$/;
+const AYUSHMAN_RE = /^[\dA-Za-z\-]{3,50}$/;
+const NAME_MAX = 150;
+const ADDRESS_MAX = 500;
+
+function validateDob(iso) {
+  if (!String(iso || "").trim()) return "Date of birth is required";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return "Enter a valid date";
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return "Invalid date";
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  if (d > today) return "Date of birth cannot be in the future";
+  let age = today.getFullYear() - d.getFullYear();
+  const m = today.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age -= 1;
+  if (age < 10) return "Patient must be at least 10 years old";
+  if (age > 120) return "Please check the date of birth";
+  return "";
+}
 
 function validateLabourForm(f) {
   const err = {};
-  if (!String(f.labourId || "").trim()) err.labourId = "Labour ID is required";
-  if (!String(f.name || "").trim()) err.name = "Name is required";
-  const aadhaar = String(f.aadhaar || "").trim();
+  const labourId = String(f.labourId || "").trim();
+  if (!labourId) err.labourId = "Labour ID is required";
+  else if (!LABOUR_ID_RE.test(labourId)) err.labourId = "Use 4–32 letters, digits, or hyphens";
+
+  const name = String(f.name || "").trim();
+  if (!name) err.name = "Name is required";
+  else if (name.length < 2) err.name = "Name must be at least 2 characters";
+  else if (name.length > NAME_MAX) err.name = `Name must be at most ${NAME_MAX} characters`;
+
+  const aadhaar = String(f.aadhaar || "").replace(/\s/g, "");
   if (!aadhaar) err.aadhaar = "Aadhaar is required";
-  else if (!/^\d{12}$/.test(aadhaar)) err.aadhaar = "Enter 12 digits";
+  else if (!/^\d{12}$/.test(aadhaar)) err.aadhaar = "Enter exactly 12 digits";
+
   const email = String(f.email || "").trim();
-  if (email && !EMAIL_RE.test(email)) err.email = "Enter a valid email";
-  if (!String(f.dob || "").trim()) err.dob = "Date of birth is required";
-  if (!String(f.gender || "").trim()) err.gender = "Select gender";
-  if (f.ayushmanCard && !String(f.ayushmanCardNumber || "").trim()) {
-    err.ayushmanCardNumber = "Ayushman card number is required";
+  if (email && !EMAIL_RE.test(email)) err.email = "Enter a valid email address";
+
+  const address = String(f.address || "");
+  if (address.length > ADDRESS_MAX) {
+    err.address = `Address must be at most ${ADDRESS_MAX} characters`;
   }
+
+  const dobErr = validateDob(String(f.dob || "").trim());
+  if (dobErr) err.dob = dobErr;
+
+  if (!String(f.gender || "").trim()) err.gender = "Select gender";
+
+  const ccForMobile = String(f.countryCode || "+91").trim();
+  const ccBare = ccForMobile.replace(/^\+/, "");
+  const mobileTrim = String(f.mobile || "").trim();
+  if (mobileTrim) {
+    if (!ccBare) err.countryCode = "Country code is required when mobile is entered";
+    else if (!/^\d{1,4}$/.test(ccBare)) err.countryCode = "Use digits only (e.g. 91)";
+
+    if (!err.countryCode) {
+      const digits = normalizeMobileForApi(ccForMobile, f.mobile);
+      if (ccBare === "91" || ccBare === "") {
+        if (!/^\d{10}$/.test(digits)) err.mobile = "Enter a valid 10-digit Indian mobile number";
+      } else if (digits.length < 8 || digits.length > 15) {
+        err.mobile = "Enter 8–15 digits for this country code";
+      }
+    }
+  }
+
+  if (f.ayushmanCard) {
+    const acn = String(f.ayushmanCardNumber || "").trim();
+    if (!acn) err.ayushmanCardNumber = "Ayushman card number is required";
+    else if (!AYUSHMAN_RE.test(acn)) err.ayushmanCardNumber = "Use 3–50 letters, digits, or hyphens";
+  }
+
   const barcode = String(f.mappedBarcode || "").trim();
-  if (!barcode) err.mappedBarcode = "EAN-13 barcode is required";
-  else if (!/^\d{13}$/.test(barcode)) err.mappedBarcode = "Enter all 13 digits";
+  if (!barcode) err.mappedBarcode = "Barcode is required";
+  else if (!BARCODE_RE.test(barcode)) err.mappedBarcode = "Use 3–64 characters: letters, digits, or hyphens";
+
   return err;
 }
 
@@ -107,7 +171,9 @@ export default function LabourRegistrationForm({ atmId = "" }) {
           ? "labourId"
           : firstKey === "ayushmanCardNumber"
             ? "ayushmanCardNumber"
-            : firstKey,
+            : firstKey === "countryCode"
+              ? "countryCode"
+              : firstKey,
       );
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
       el?.focus?.();
@@ -138,6 +204,7 @@ export default function LabourRegistrationForm({ atmId = "" }) {
           ? String(previewValues.ayushmanCardNumber || "").trim()
           : "",
         mappedBarcode: previewValues.mappedBarcode,
+        address: String(previewValues.address || "").trim(),
       });
       setPreviewOpen(false);
       setPreviewValues(null);
@@ -221,8 +288,7 @@ export default function LabourRegistrationForm({ atmId = "" }) {
             </p>
           ) : null}
           <p className="field-hint">
-            Dummy data: try Labour IDs <strong>UKHA001</strong>, <strong>DEMO002</strong>, <strong>YH003</strong>, or{" "}
-            <strong>YH004</strong>. Real API can replace this later.
+            Enter the labour registration number, then <strong>Load details</strong> to fetch data from the server.
           </p>
         </section>
 
@@ -252,10 +318,12 @@ export default function LabourRegistrationForm({ atmId = "" }) {
                   </span>
                   <div className="mobile-row" role="group" aria-labelledby="mobile-label">
                     <input
+                      id="countryCode"
                       type="text"
                       inputMode="numeric"
                       className="input input--code"
                       aria-label="Country code"
+                      aria-invalid={errors.countryCode ? "true" : "false"}
                       value={form.countryCode}
                       onChange={(e) => updateField("countryCode", e.target.value)}
                     />
@@ -265,10 +333,13 @@ export default function LabourRegistrationForm({ atmId = "" }) {
                       className="input input--grow"
                       autoComplete="tel"
                       inputMode="numeric"
+                      aria-invalid={errors.mobile ? "true" : "false"}
                       value={form.mobile}
                       onChange={(e) => updateField("mobile", e.target.value)}
                     />
                   </div>
+                  {errors.countryCode ? <p className="field-error">{errors.countryCode}</p> : null}
+                  {errors.mobile ? <p className="field-error">{errors.mobile}</p> : null}
                 </div>
 
                 <div className="field">
@@ -303,6 +374,23 @@ export default function LabourRegistrationForm({ atmId = "" }) {
                     aria-invalid={errors.email ? "true" : "false"}
                   />
                   {errors.email ? <p className="field-error">{errors.email}</p> : null}
+                </div>
+
+                <div className="field field--full">
+                  <label className="field-label" htmlFor="address">
+                    Address
+                  </label>
+                  <textarea
+                    id="address"
+                    className="input input--textarea"
+                    rows={2}
+                    autoComplete="street-address"
+                    maxLength={ADDRESS_MAX}
+                    value={form.address}
+                    onChange={(e) => updateField("address", e.target.value)}
+                    aria-invalid={errors.address ? "true" : "false"}
+                  />
+                  {errors.address ? <p className="field-error">{errors.address}</p> : null}
                 </div>
 
                 <div className="field">
@@ -389,37 +477,29 @@ export default function LabourRegistrationForm({ atmId = "" }) {
 
                 <div className="field span-barcode">
                   <label className="field-label" htmlFor="mappedBarcode">
-                    EAN-13 barcode <span className="req">*</span>
+                    Barcode <span className="req">*</span>
                   </label>
-                  <p className="field-hint field-hint--tight">
-                    USB / Bluetooth scanners: tap here, then scan (the digits appear like typing). Or use the camera
-                    scanner. 13 digits for EAN-13.
-                  </p>
                   <input
                     id="mappedBarcode"
                     type="text"
                     className="input"
                     autoComplete="off"
-                    inputMode="numeric"
-                    maxLength={13}
-                    placeholder="13-digit EAN-13"
+                    maxLength={64}
                     enterKeyHint="done"
                     value={form.mappedBarcode}
-                    onChange={(e) => updateField("mappedBarcode", e.target.value.replace(/\D/g, "").slice(0, 13))}
+                    onChange={(e) =>
+                      updateField(
+                        "mappedBarcode",
+                        e.target.value.replace(/[^A-Za-z0-9\-]/g, "").slice(0, 64),
+                      )
+                    }
                     aria-invalid={errors.mappedBarcode ? "true" : "false"}
                     aria-required="true"
                   />
                   {errors.mappedBarcode ? <p className="field-error">{errors.mappedBarcode}</p> : null}
                   <div className="barcode-actions">
                     <button type="button" className="btn btn-scan" onClick={() => setBarcodeScanOpen(true)}>
-                      Scan with camera (EAN-13)
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-text"
-                      onClick={() => updateField("mappedBarcode", "4006381333931")}
-                    >
-                      Use sample EAN-13 (dummy)
+                      Scan with camera
                     </button>
                   </div>
                 </div>
@@ -434,7 +514,7 @@ export default function LabourRegistrationForm({ atmId = "" }) {
                 title={
                   canReviewSubmit
                     ? undefined
-                    : "Enter every required field (red *) including a valid 13-digit EAN-13 barcode."
+                    : "Fill every required field (red *), including a valid barcode."
                 }
               >
                 Review & submit
@@ -450,8 +530,8 @@ export default function LabourRegistrationForm({ atmId = "" }) {
             open
             onClose={() => setBarcodeScanOpen(false)}
             onDetected={(code) => {
-              const digits = String(code).replace(/\D/g, "").slice(0, 13);
-              updateField("mappedBarcode", digits);
+              const cleaned = String(code).replace(/[^A-Za-z0-9\-]/g, "").slice(0, 64);
+              updateField("mappedBarcode", cleaned);
               setBarcodeScanOpen(false);
             }}
           />

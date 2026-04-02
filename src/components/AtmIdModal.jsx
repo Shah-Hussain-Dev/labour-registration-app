@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+const KIOSK_ID_RE = /^[A-Za-z0-9\-]{3,32}$/;
+
 /**
  * First visit: blocking until ATM ID is saved. Change flow: can cancel to keep previous ID.
  */
@@ -22,6 +24,10 @@ export default function AtmIdModal({ open, blocking, initialAtmId, onSave, onClo
     const t = String(value || "").trim();
     if (!t) {
       setError("ATM ID is required.");
+      return;
+    }
+    if (!KIOSK_ID_RE.test(t)) {
+      setError("Use 3–32 letters, digits, or hyphens (e.g. UKHA001).");
       return;
     }
     onSave(t);
@@ -61,7 +67,7 @@ export default function AtmIdModal({ open, blocking, initialAtmId, onSave, onClo
             }}
             aria-invalid={error ? "true" : "false"}
             aria-describedby={error ? "atm-id-err" : undefined}
-            placeholder="e.g. ATM-MUM-01"
+            placeholder="e.g. UKHA001"
           />
           {error ? (
             <p id="atm-id-err" className="field-error" role="alert">
