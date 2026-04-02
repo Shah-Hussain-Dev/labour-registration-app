@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import AtmIdModal from "./components/AtmIdModal.jsx";
 import logoUrl from "./assets/logo.png";
 import LabourRegistrationForm from "./components/LabourRegistrationForm.jsx";
-import { ATM_ID_STORAGE_KEY } from "./constants/storage.js";
+import { ATM_ID_STORAGE_KEY, normalizeAtmId } from "./constants/storage.js";
 
 /** Full brand mark in header (high-res from your icon set) */
 const HEADER_LOGO_SRC = logoUrl;
@@ -10,7 +10,7 @@ const HEADER_LOGO_SRC = logoUrl;
 function readStoredAtmId() {
   if (typeof window === "undefined") return "";
   try {
-    return localStorage.getItem(ATM_ID_STORAGE_KEY)?.trim() || "";
+    return normalizeAtmId(localStorage.getItem(ATM_ID_STORAGE_KEY) ?? "");
   } catch {
     return "";
   }
@@ -21,12 +21,13 @@ export default function App() {
   const [atmModalOpen, setAtmModalOpen] = useState(() => !readStoredAtmId());
 
   const handleAtmSave = useCallback((id) => {
+    const normalized = normalizeAtmId(id);
     try {
-      localStorage.setItem(ATM_ID_STORAGE_KEY, id);
+      localStorage.setItem(ATM_ID_STORAGE_KEY, normalized);
     } catch {
       /* storage full / private mode */
     }
-    setAtmId(id);
+    setAtmId(normalized);
     setAtmModalOpen(false);
   }, []);
 

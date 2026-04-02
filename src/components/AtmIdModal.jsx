@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { normalizeAtmId } from "../constants/storage.js";
 
 const KIOSK_ID_RE = /^[A-Za-z0-9\-]{3,32}$/;
 
@@ -12,7 +13,7 @@ export default function AtmIdModal({ open, blocking, initialAtmId, onSave, onClo
 
   useEffect(() => {
     if (open) {
-      setValue(initialAtmId ?? "");
+      setValue(normalizeAtmId(initialAtmId ?? ""));
       setError("");
     }
   }, [open, initialAtmId]);
@@ -21,7 +22,7 @@ export default function AtmIdModal({ open, blocking, initialAtmId, onSave, onClo
 
   function handleSubmit(e) {
     e.preventDefault();
-    const t = String(value || "").trim();
+    const t = normalizeAtmId(value);
     if (!t) {
       setError("ATM ID is required.");
       return;
@@ -62,7 +63,7 @@ export default function AtmIdModal({ open, blocking, initialAtmId, onSave, onClo
             autoFocus
             value={value}
             onChange={(e) => {
-              setValue(e.target.value);
+              setValue(e.target.value.toUpperCase());
               if (error) setError("");
             }}
             aria-invalid={error ? "true" : "false"}
