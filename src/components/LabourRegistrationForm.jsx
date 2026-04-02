@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import {
   fetchLabourById,
   normalizeMobileForApi,
@@ -116,6 +116,14 @@ export default function LabourRegistrationForm({ atmId = "" }) {
   const [loadingLabour, setLoadingLabour] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewValues, setPreviewValues] = useState(null);
+  const wasPreviewOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (wasPreviewOpenRef.current && !previewOpen) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    wasPreviewOpenRef.current = previewOpen;
+  }, [previewOpen]);
   const [finalSubmitting, setFinalSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [submitError, setSubmitError] = useState("");
