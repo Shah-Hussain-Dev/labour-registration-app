@@ -370,37 +370,40 @@ export default function LabourRegistrationForm({ atmId = "" }) {
                   {errors.aadhaar ? <p className="field-error">{errors.aadhaar}</p> : null}
                 </div>
 
-                <div className="field">
-                  <label className="field-label" htmlFor="email">
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    className="input"
-                    autoComplete="email"
-                    value={form.email}
-                    onChange={(e) => updateField("email", e.target.value)}
-                    aria-invalid={errors.email ? "true" : "false"}
-                  />
-                  {errors.email ? <p className="field-error">{errors.email}</p> : null}
-                </div>
-
-                <div className="field field--full">
-                  <label className="field-label" htmlFor="address">
-                    Address
-                  </label>
-                  <textarea
-                    id="address"
-                    className="input input--textarea"
-                    rows={2}
-                    autoComplete="street-address"
-                    maxLength={ADDRESS_MAX}
-                    value={form.address}
-                    onChange={(e) => updateField("address", e.target.value)}
-                    aria-invalid={errors.address ? "true" : "false"}
-                  />
-                  {errors.address ? <p className="field-error">{errors.address}</p> : null}
+                <div className="field field--full form-row-email-address">
+                  <div className="form-row-email-address__inner">
+                    <div className="field form-row-email-address__email">
+                      <label className="field-label" htmlFor="email">
+                        Email
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        className="input"
+                        autoComplete="email"
+                        value={form.email}
+                        onChange={(e) => updateField("email", e.target.value)}
+                        aria-invalid={errors.email ? "true" : "false"}
+                      />
+                      {errors.email ? <p className="field-error">{errors.email}</p> : null}
+                    </div>
+                    <div className="field form-row-email-address__address">
+                      <label className="field-label" htmlFor="address">
+                        Address
+                      </label>
+                      <textarea
+                        id="address"
+                        className="input input--textarea"
+                        rows={2}
+                        autoComplete="street-address"
+                        maxLength={ADDRESS_MAX}
+                        value={form.address}
+                        onChange={(e) => updateField("address", e.target.value)}
+                        aria-invalid={errors.address ? "true" : "false"}
+                      />
+                      {errors.address ? <p className="field-error">{errors.address}</p> : null}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="field">
