@@ -213,6 +213,8 @@ export default function LabourRegistrationForm({ atmId = "" }) {
       setForm(emptyForm());
       setErrors({});
     } catch (e) {
+      setPreviewOpen(false);
+      setPreviewValues(null);
       setSubmitError(e.message || "Submission failed.");
     } finally {
       setFinalSubmitting(false);
