@@ -6,7 +6,7 @@
 const HMS_PUBLIC_BASE = "https://hms.yolohealth.in/api";
 
 function apiRoot() {
-  return import.meta.env.DEV ? "/yolo-hms-api" : HMS_PUBLIC_BASE;
+  return HMS_PUBLIC_BASE;
 }
 
 async function postJson(path, body) {
