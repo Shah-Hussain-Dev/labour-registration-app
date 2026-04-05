@@ -3,7 +3,7 @@
  * Dev: Vite proxies /yolo-hms-api → https://hms.yolohealth.in/api (see vite.config.js).
  */
 
-const HMS_PUBLIC_BASE = "https://hms.yolohealth.in/api";
+const HMS_PUBLIC_BASE = import.meta.env.VITE_API_URL || "https://hms.yolohealth.in/api";
 
 function apiRoot() {
   return HMS_PUBLIC_BASE;
